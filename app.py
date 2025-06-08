@@ -41,26 +41,18 @@ def login_page():
 
         # If user exists and password matches the hashed password
         if user:
-            # If the password method is invalid, rehash the password
-            if user.password == '':
-                return jsonify({"message": "Password hash method missing!"}), 500
-            
             if check_password_hash(user.password, password):
                 login_user(user)  # Log in the user
-
-                # Check for the 'next' parameter and redirect accordingly
                 next_page = request.args.get('next')
                 if next_page:
-                    return redirect(next_page)  # Redirect to the page the user wanted to visit
+                    return redirect(next_page)
                 else:
                     return redirect(url_for('dashboard_page'))  # Default to dashboard if no 'next' parameter
             else:
                 return jsonify({"message": "Invalid credentials!"}), 401
         else:
             return jsonify({"message": "User not found!"}), 404
-
     return render_template('login.html')
-
 
 # Serve the registration page
 @app.route('/register', methods=['GET', 'POST'])
@@ -82,33 +74,15 @@ def register_page():
         return jsonify({"message": "User created successfully!"}), 201
     return render_template('register.html')
 
-
 # Serve the dashboard page after login
 @app.route('/dashboard')
-@login_required  # Protect the dashboard route with login_required
+@login_required
 def dashboard_page():
-    # Get all disasters and alerts from the database
     disasters = Disaster.query.all()
     alerts = Alert.query.all()
-
-    # Pass disasters and alerts to the template
     return render_template('dashboard.html', disasters=disasters, alerts=alerts)
 
-
-# Logout function
-@app.route('/logout')
-@login_required  # Ensure the user is logged in before they can log out
-def logout():
-    logout_user()  # This logs the user out
-    return redirect(url_for('login_page'))  # Redirect to login page after logout
-
-
-# Profile page for logged-in users
-@app.route('/profile')
-@login_required
-def profile():
-    return "You are logged in!"
-
+# Add disaster form submission
 @app.route('/add_disaster', methods=['POST'])
 @login_required
 def add_disaster():
@@ -123,6 +97,38 @@ def add_disaster():
 
     return redirect(url_for('dashboard_page'))
 
+# Add alert form submission
+@app.route('/add_alert', methods=['POST'])
+@login_required
+def add_alert():
+    disaster_id = request.form['disaster_id']
+    alert_type = request.form['alert_type']
+    message = request.form['message']
+    time_sent = request.form['time_sent']
+
+    new_alert = Alert(
+        disaster_id=disaster_id,
+        alert_type=alert_type,
+        message=message,
+        time_sent=time_sent
+    )
+    db.session.add(new_alert)
+    db.session.commit()
+
+    return redirect(url_for('dashboard_page'))
+
+# Logout function
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()  # This logs the user out
+    return redirect(url_for('login_page'))  # Redirect to login page after logout
+
+# Profile page for logged-in users
+@app.route('/profile')
+@login_required
+def profile():
+    return "You are logged in!"
 
 # Initialize Flask-RESTX API
 api = Api(app, version='1.0', title='Geographic Disaster Monitoring API',
@@ -147,14 +153,12 @@ alert_model = api.model('Alert', {
 @api.route('/disasters')
 class DisasterResource(Resource):
     def get(self):
-        """Retrieve all disasters"""
         disasters = Disaster.query.all()
         disaster_schema = DisasterSchema(many=True)
         return disaster_schema.dump(disasters), 200
 
     @api.expect(disaster_model)
     def post(self):
-        """Create a new disaster"""
         disaster_data = request.get_json()
         try:
             disaster = Disaster(
@@ -174,14 +178,12 @@ class DisasterResource(Resource):
 @api.route('/alerts')
 class AlertResource(Resource):
     def get(self):
-        """Retrieve all alerts"""
         alerts = Alert.query.all()
         alert_schema = AlertSchema(many=True)
         return alert_schema.dump(alerts), 200
 
     @api.expect(alert_model)
     def post(self):
-        """Create a new alert"""
         alert_data = request.get_json()
         try:
             alert = Alert(
@@ -196,7 +198,6 @@ class AlertResource(Resource):
             return alert_schema.dump(alert), 201
         except Exception as e:
             return {"message": str(e)}, 500
-
 
 # Main entry point
 if __name__ == '__main__':
