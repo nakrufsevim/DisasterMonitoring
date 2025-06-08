@@ -44,6 +44,13 @@ def login_page():
             return jsonify({"message": "Invalid credentials!"}), 401
     return render_template('login.html')
 
+@app.route('/logout')
+@login_required  # Ensure the user is logged in before they can log out
+def logout():
+    logout_user()  # This logs the user out
+    return jsonify({"message": "Logged out successfully!"}), 200
+
+
 # Serve the registration page
 @app.route('/register', methods=['GET', 'POST'])
 def register_page():
