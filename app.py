@@ -87,7 +87,12 @@ def register_page():
 @app.route('/dashboard')
 @login_required  # Protect the dashboard route with login_required
 def dashboard_page():
-    return render_template('dashboard.html')
+    # Get all disasters and alerts from the database
+    disasters = Disaster.query.all()
+    alerts = Alert.query.all()
+
+    # Pass disasters and alerts to the template
+    return render_template('dashboard.html', disasters=disasters, alerts=alerts)
 
 
 # Logout function
@@ -103,6 +108,20 @@ def logout():
 @login_required
 def profile():
     return "You are logged in!"
+
+@app.route('/add_disaster', methods=['POST'])
+@login_required
+def add_disaster():
+    disaster_type = request.form['disaster_type']
+    location = request.form['location']
+    severity = request.form['severity']
+    time_occurred = request.form['time_occurred']
+
+    disaster = Disaster(disaster_type=disaster_type, location=location, severity=severity, time_occurred=time_occurred)
+    db.session.add(disaster)
+    db.session.commit()
+
+    return redirect(url_for('dashboard_page'))
 
 
 # Initialize Flask-RESTX API

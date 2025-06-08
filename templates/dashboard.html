@@ -5,6 +5,7 @@
     <p class="text-center">You are logged in as {{ current_user.username }}.</p>
 
     <div class="row">
+        <!-- Recent Disasters Section -->
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
@@ -12,13 +13,39 @@
                 </div>
                 <div class="card-body">
                     <ul>
-                        <li>Earthquake in California</li>
-                        <li>Flood in New York</li>
-                        <li>Wildfire in Australia</li>
+                        {% for disaster in disasters %}
+                            <li>{{ disaster.disaster_type }} in {{ disaster.location }} (Severity: {{ disaster.severity }})</li>
+                        {% else %}
+                            <li>No recent disasters</li>
+                        {% endfor %}
                     </ul>
+
+                    <!-- Form to Add a New Disaster -->
+                    <h5>Add a New Disaster</h5>
+                    <form method="POST" action="{{ url_for('add_disaster') }}">
+                        <div class="mb-3">
+                            <label for="disaster_type" class="form-label">Disaster Type</label>
+                            <input type="text" class="form-control" id="disaster_type" name="disaster_type" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="location" class="form-label">Location</label>
+                            <input type="text" class="form-control" id="location" name="location" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="severity" class="form-label">Severity</label>
+                            <input type="number" class="form-control" id="severity" name="severity" step="0.1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="time_occurred" class="form-label">Time Occurred</label>
+                            <input type="datetime-local" class="form-control" id="time_occurred" name="time_occurred" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Disaster</button>
+                    </form>
                 </div>
             </div>
         </div>
+
+        <!-- Latest Alerts Section -->
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
@@ -26,9 +53,34 @@
                 </div>
                 <div class="card-body">
                     <ul>
-                        <li>Evacuation warning for California</li>
-                        <li>Flood alert for New York</li>
+                        {% for alert in alerts %}
+                            <li>{{ alert.alert_type }} for Disaster ID: {{ alert.disaster_id }} - {{ alert.message }} (Time: {{ alert.time_sent }})</li>
+                        {% else %}
+                            <li>No recent alerts</li>
+                        {% endfor %}
                     </ul>
+
+                    <!-- Form to Add a New Alert -->
+                    <h5>Add a New Alert</h5>
+                    <form method="POST" action="{{ url_for('add_alert') }}">
+                        <div class="mb-3">
+                            <label for="disaster_id" class="form-label">Disaster ID</label>
+                            <input type="number" class="form-control" id="disaster_id" name="disaster_id" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="alert_type" class="form-label">Alert Type</label>
+                            <input type="text" class="form-control" id="alert_type" name="alert_type" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message</label>
+                            <textarea class="form-control" id="message" name="message" rows="3" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="time_sent" class="form-label">Time Sent</label>
+                            <input type="datetime-local" class="form-control" id="time_sent" name="time_sent" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Alert</button>
+                    </form>
                 </div>
             </div>
         </div>
