@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+</head>
+<body>
+    <h2>Disasters and Alerts</h2>
+    <h3>Disasters</h3>
+    <ul id="disasters-list"></ul>
+
+    <h3>Alerts</h3>
+    <ul id="alerts-list"></ul>
+
+    <script>
+        async function fetchData() {
+            // Fetch disasters
+            const disasterResponse = await fetch('http://127.0.0.1:5000/disasters');
+            const disasters = await disasterResponse.json();
+            const disasterList = document.getElementById('disasters-list');
+            disasters.forEach(disaster => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${disaster.disaster_type} - ${disaster.location}`;
+                disasterList.appendChild(listItem);
+            });
+
+            // Fetch alerts
+            const alertResponse = await fetch('http://127.0.0.1:5000/alerts');
+            const alerts = await alertResponse.json();
+            const alertList = document.getElementById('alerts-list');
+            alerts.forEach(alert => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${alert.alert_type}: ${alert.message}`;
+                alertList.appendChild(listItem);
+            });
+        }
+
+        fetchData();
+    </script>
+</body>
+</html>

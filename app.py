@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
@@ -27,6 +27,22 @@ login_manager.login_view = 'login'  # Set login route for Flask-Login
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+# Serve the login page
+@app.route('/login')
+def login_page():
+    return render_template('login.html')
+
+# Serve the registration page
+@app.route('/register')
+def register_page():
+    return render_template('register.html')
+
+# Serve the dashboard page after login
+@app.route('/dashboard')
+@login_required  # Protect the dashboard route with login_required
+def dashboard_page():
+    return render_template('dashboard.html')
 
 # Initialize Flask-RESTX API
 api = Api(app, version='1.0', title='Geographic Disaster Monitoring API',
