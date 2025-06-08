@@ -8,17 +8,17 @@
                     <h4>Login</h4>
                 </div>
                 <div class="card-body">
-                    <form action="{{ url_for('login_page') }}" method="POST">
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="username" name="username" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Login</button>
-                    </form>
+                    <form method="POST" action="{{ url_for('login_page') }}">
+    <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" class="form-control" id="username" name="username" required>
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password" name="password" required>
+    </div>
+    <button type="submit" class="btn btn-primary w-100">Login</button>
+</form>
                     <div class="text-center mt-3">
                         <p>Don't have an account? <a href="{{ url_for('register_page') }}">Register</a></p>
                     </div>

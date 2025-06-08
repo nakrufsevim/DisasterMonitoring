@@ -40,14 +40,16 @@ def login_page():
         if user and user.check_password(password):  # Check if passwords match
             login_user(user)  # Log in the user
             
-            # Redirect to 'next' URL if provided, or default to dashboard
+            # Check for the 'next' parameter and redirect accordingly
             next_page = request.args.get('next')
             if next_page:
-                return redirect(next_page)
-            return redirect(url_for('dashboard_page'))  # Redirect to dashboard after successful login
+                return redirect(next_page)  # Redirect to the page the user wanted to visit
+            else:
+                return redirect(url_for('dashboard_page'))  # Default to dashboard if no 'next' parameter
         else:
             return jsonify({"message": "Invalid credentials!"}), 401
     return render_template('login.html')
+
 
 @app.route('/logout')
 @login_required  # Ensure the user is logged in before they can log out
