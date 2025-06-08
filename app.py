@@ -4,8 +4,8 @@ from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_restx import Api, Resource, fields
-from models import db, User, Disaster, Alert, DisasterSchema, AlertSchema
 from werkzeug.security import generate_password_hash, check_password_hash
+from models import db, User, Disaster, Alert, DisasterSchema, AlertSchema
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -38,17 +38,27 @@ def login_page():
         
         # Check if user exists
         user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password, password):  # Check if passwords match
-            login_user(user)  # Log in the user
+
+        # If user exists and password matches the hashed password
+        if user:
+            # If the password method is invalid, rehash the password
+            if user.password == '':
+                return jsonify({"message": "Password hash method missing!"}), 500
             
-            # Check for the 'next' parameter and redirect accordingly
-            next_page = request.args.get('next')
-            if next_page:
-                return redirect(next_page)  # Redirect to the page the user wanted to visit
+            if check_password_hash(user.password, password):
+                login_user(user)  # Log in the user
+
+                # Check for the 'next' parameter and redirect accordingly
+                next_page = request.args.get('next')
+                if next_page:
+                    return redirect(next_page)  # Redirect to the page the user wanted to visit
+                else:
+                    return redirect(url_for('dashboard_page'))  # Default to dashboard if no 'next' parameter
             else:
-                return redirect(url_for('dashboard_page'))  # Default to dashboard if no 'next' parameter
+                return jsonify({"message": "Invalid credentials!"}), 401
         else:
-            return jsonify({"message": "Invalid credentials!"}), 401
+            return jsonify({"message": "User not found!"}), 404
+
     return render_template('login.html')
 
 
@@ -64,7 +74,7 @@ def register_page():
             return jsonify({"message": "Username already exists!"}), 400
         
         # Create new user and store the hashed password
-        hashed_password = generate_password_hash(password, method='sha256')
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')  # Correct hashing method
         new_user = User(username=username, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()

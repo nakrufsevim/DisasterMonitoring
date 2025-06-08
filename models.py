@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_bcrypt import Bcrypt
+from werkzeug.security import check_password_hash
 
 # Initialize db, Marshmallow, and Bcrypt
 db = SQLAlchemy()  # This is the database object
@@ -53,14 +54,27 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(150), nullable=False)
-    is_active = db.Column(db.Boolean, default=True)  # Added is_active attribute
+    is_active = db.Column(db.Boolean, default=True)
 
     def __init__(self, username, password):
         self.username = username
-        self.password = bcrypt.generate_password_hash(password).decode('utf-8')
+        self.password = password
+
+    # Flask-Login requires these methods
+    def get_id(self):
+        return str(self.id)
+
+    def is_authenticated(self):
+        return True  # All users are considered authenticated once logged in
+
+    def is_active(self):
+        return self.is_active  # Check if the user is active
+
+    def is_anonymous(self):
+        return False  # False because we want to avoid anonymous users
 
     def check_password(self, password):
-        return bcrypt.check_password_hash(self.password, password)
+        return check_password_hash(self.password, password)
 
 
 class UserSchema(ma.SQLAlchemyAutoSchema):
