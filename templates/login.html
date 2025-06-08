@@ -8,7 +8,7 @@
                     <h4>Login</h4>
                 </div>
                 <div class="card-body">
-                    <form method="POST">
+                    <form action="{{ url_for('login_page') }}" method="POST">
                         <div class="mb-3">
                             <label for="username" class="form-label">Username</label>
                             <input type="text" class="form-control" id="username" name="username" required>
@@ -20,10 +20,11 @@
                         <button type="submit" class="btn btn-primary w-100">Login</button>
                     </form>
                     <div class="text-center mt-3">
-                        <p>Don't have an account? <a href="{{ url_for('register') }}">Register</a></p>
+                        <p>Don't have an account? <a href="{{ url_for('register_page') }}">Register</a></p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 {% endblock %}
+

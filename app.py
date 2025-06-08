@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
@@ -29,13 +29,39 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # Serve the login page
-@app.route('/login')
+@app.route('/login', methods=['GET', 'POST'])
 def login_page():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        # Check if user exists
+        user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password):  # Check if passwords match
+            login_user(user)  # Log in the user
+            return redirect(url_for('dashboard_page'))  # Redirect to dashboard after successful login
+        else:
+            return jsonify({"message": "Invalid credentials!"}), 401
     return render_template('login.html')
 
 # Serve the registration page
-@app.route('/register')
+@app.route('/register', methods=['GET', 'POST'])
 def register_page():
+    if request.method == 'POST':
+        data = request.form
+        username = data['username']
+        password = data['password']
+        
+        # Check if user already exists
+        if User.query.filter_by(username=username).first():
+            return jsonify({"message": "Username already exists!"}), 400
+        
+        # Create new user and store the hashed password
+        new_user = User(username=username, password=password)
+        db.session.add(new_user)
+        db.session.commit()
+        
+        return jsonify({"message": "User created successfully!"}), 201
     return render_template('register.html')
 
 # Serve the dashboard page after login
@@ -47,44 +73,6 @@ def dashboard_page():
 # Initialize Flask-RESTX API
 api = Api(app, version='1.0', title='Geographic Disaster Monitoring API',
           description='An API for monitoring and alerting natural disasters')
-
-# User authentication model - User login and registration
-@app.route('/login', methods=['POST'])
-def login():
-    data = request.get_json()
-    username = data['username']
-    password = data['password']
-    
-    # Check if user exists
-    user = User.query.filter_by(username=username).first()
-    if user and user.check_password(password):  # Check if passwords match
-        login_user(user)  # Log in the user
-        return jsonify({"message": "Logged in successfully!"}), 200
-    else:
-        return jsonify({"message": "Invalid credentials!"}), 401
-
-@app.route('/logout')
-@login_required  # Protect logout with login_required
-def logout():
-    logout_user()  # Log out the user
-    return jsonify({"message": "Logged out successfully!"}), 200
-
-@app.route('/register', methods=['POST'])
-def register():
-    data = request.get_json()
-    username = data['username']
-    password = data['password']
-    
-    # Check if user already exists
-    if User.query.filter_by(username=username).first():
-        return jsonify({"message": "Username already exists!"}), 400
-    
-    # Create new user and store the hashed password
-    new_user = User(username=username, password=password)
-    db.session.add(new_user)
-    db.session.commit()
-    
-    return jsonify({"message": "User created successfully!"}), 201
 
 # Disaster and Alert API models for Swagger documentation
 disaster_model = api.model('Disaster', {
