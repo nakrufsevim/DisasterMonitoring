@@ -13,7 +13,7 @@ app = Flask(__name__)
 # Configurations
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///disasters.db'  # SQLite for dev, PostgreSQL for production
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'os.urandom(24)'  # Replace with a secure secret key
+app.config['SECRET_KEY'] = 'os.urandom(24)'
 
 # Initialize SQLAlchemy, Marshmallow, Flask-Migrate, and Flask-Login
 db.init_app(app)
@@ -66,7 +66,7 @@ def register_page():
             return jsonify({"message": "Username already exists!"}), 400
         
         # Create new user and store the hashed password
-        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')  # Correct hashing method
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
         new_user = User(username=username, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
@@ -121,7 +121,7 @@ def add_alert():
 @app.route('/logout')
 @login_required
 def logout():
-    logout_user()  # This logs the user out
+    logout_user()
     return redirect(url_for('login_page'))  # Redirect to login page after logout
 
 # Profile page for logged-in users
