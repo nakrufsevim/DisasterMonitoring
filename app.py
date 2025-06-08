@@ -21,7 +21,7 @@ migrate = Migrate(app, db)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'login'  # Set login route for Flask-Login
+login_manager.login_view = 'login_page'  # Set login route for Flask-Login
 
 # User Loader for Flask-Login
 @login_manager.user_loader
