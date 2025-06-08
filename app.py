@@ -3,16 +3,16 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
-from flask_restx import Api, Resource, fields  # Corrected import for api and fields
-from models import db, User, Disaster, Alert, DisasterSchema, AlertSchema  # Import models from models.py
+from flask_restx import Api, Resource, fields
+from models import db, User, Disaster, Alert, DisasterSchema, AlertSchema
 
 # Initialize Flask app
 app = Flask(__name__)
 
-# Configurations (can be moved to config.py)
+# Configurations
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///disasters.db'  # SQLite for dev, PostgreSQL for production
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'os.urandom(24)'  # Replace with a secure secret key (use os.urandom(24))
+app.config['SECRET_KEY'] = 'os.urandom(24)'  # Replace with a secure secret key
 
 # Initialize SQLAlchemy, Marshmallow, Flask-Migrate, and Flask-Login
 db.init_app(app)
@@ -39,6 +39,11 @@ def login_page():
         user = User.query.filter_by(username=username).first()
         if user and user.check_password(password):  # Check if passwords match
             login_user(user)  # Log in the user
+            
+            # Redirect to 'next' URL if provided, or default to dashboard
+            next_page = request.args.get('next')
+            if next_page:
+                return redirect(next_page)
             return redirect(url_for('dashboard_page'))  # Redirect to dashboard after successful login
         else:
             return jsonify({"message": "Invalid credentials!"}), 401
@@ -48,8 +53,7 @@ def login_page():
 @login_required  # Ensure the user is logged in before they can log out
 def logout():
     logout_user()  # This logs the user out
-    return jsonify({"message": "Logged out successfully!"}), 200
-
+    return redirect(url_for('login_page'))  # Redirect to login page after logout
 
 # Serve the registration page
 @app.route('/register', methods=['GET', 'POST'])
