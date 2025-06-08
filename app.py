@@ -5,6 +5,7 @@ from flask_migrate import Migrate
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_restx import Api, Resource, fields
 from models import db, User, Disaster, Alert, DisasterSchema, AlertSchema
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -37,7 +38,7 @@ def login_page():
         
         # Check if user exists
         user = User.query.filter_by(username=username).first()
-        if user and user.check_password(password):  # Check if passwords match
+        if user and check_password_hash(user.password, password):  # Check if passwords match
             login_user(user)  # Log in the user
             
             # Check for the 'next' parameter and redirect accordingly
@@ -51,37 +52,48 @@ def login_page():
     return render_template('login.html')
 
 
-@app.route('/logout')
-@login_required  # Ensure the user is logged in before they can log out
-def logout():
-    logout_user()  # This logs the user out
-    return redirect(url_for('login_page'))  # Redirect to login page after logout
-
 # Serve the registration page
 @app.route('/register', methods=['GET', 'POST'])
 def register_page():
     if request.method == 'POST':
-        data = request.form
-        username = data['username']
-        password = data['password']
+        username = request.form['username']
+        password = request.form['password']
         
         # Check if user already exists
         if User.query.filter_by(username=username).first():
             return jsonify({"message": "Username already exists!"}), 400
         
         # Create new user and store the hashed password
-        new_user = User(username=username, password=password)
+        hashed_password = generate_password_hash(password, method='sha256')
+        new_user = User(username=username, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
         
         return jsonify({"message": "User created successfully!"}), 201
     return render_template('register.html')
 
+
 # Serve the dashboard page after login
 @app.route('/dashboard')
 @login_required  # Protect the dashboard route with login_required
 def dashboard_page():
     return render_template('dashboard.html')
+
+
+# Logout function
+@app.route('/logout')
+@login_required  # Ensure the user is logged in before they can log out
+def logout():
+    logout_user()  # This logs the user out
+    return redirect(url_for('login_page'))  # Redirect to login page after logout
+
+
+# Profile page for logged-in users
+@app.route('/profile')
+@login_required
+def profile():
+    return "You are logged in!"
+
 
 # Initialize Flask-RESTX API
 api = Api(app, version='1.0', title='Geographic Disaster Monitoring API',
@@ -155,6 +167,7 @@ class AlertResource(Resource):
             return alert_schema.dump(alert), 201
         except Exception as e:
             return {"message": str(e)}, 500
+
 
 # Main entry point
 if __name__ == '__main__':
