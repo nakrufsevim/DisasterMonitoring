@@ -14,6 +14,7 @@ app = Flask(__name__)
 # Configurations
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///disasters.db'  # SQLite for dev, PostgreSQL for production
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_RECORD_QUERIES'] = True
 app.config['SECRET_KEY'] = 'os.urandom(24)'  # Replace with a secure secret key
 
 # Debug Toolbar settings (only in development mode)
