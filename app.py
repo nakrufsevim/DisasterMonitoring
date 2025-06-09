@@ -6,6 +6,7 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 from flask_restx import Api, Resource, fields
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, Disaster, Alert, DisasterSchema, AlertSchema
+from flask_debugtoolbar import DebugToolbarExtension
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -13,16 +14,22 @@ app = Flask(__name__)
 # Configurations
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///disasters.db'  # SQLite for dev, PostgreSQL for production
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'os.urandom(24)'
+app.config['SECRET_KEY'] = 'os.urandom(24)'  # Replace with a secure secret key
 
-# Initialize SQLAlchemy, Marshmallow, Flask-Migrate, and Flask-Login
+# Debug Toolbar settings (only in development mode)
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False  # Disable automatic redirects
+app.config['DEBUG_TB_ENABLED'] = True  # Enable Debug Toolbar
+
+# Initialize SQLAlchemy, Marshmallow, Flask-Migrate, Flask-Login, and Debug Toolbar
 db.init_app(app)
 ma = Marshmallow(app)
 migrate = Migrate(app, db)
-
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login_page'  # Set login route for Flask-Login
+
+# Initialize Debug Toolbar
+toolbar = DebugToolbarExtension(app)
 
 # User Loader for Flask-Login
 @login_manager.user_loader
@@ -43,6 +50,8 @@ def login_page():
         if user:
             if check_password_hash(user.password, password):
                 login_user(user)  # Log in the user
+
+                # Check for the 'next' parameter and redirect accordingly
                 next_page = request.args.get('next')
                 if next_page:
                     return redirect(next_page)
@@ -52,6 +61,7 @@ def login_page():
                 return jsonify({"message": "Invalid credentials!"}), 401
         else:
             return jsonify({"message": "User not found!"}), 404
+
     return render_template('login.html')
 
 # Serve the registration page
@@ -201,4 +211,4 @@ class AlertResource(Resource):
 
 # Main entry point
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True)  # This will allow the Flask Debug Toolbar to appear in the browser
